@@ -1,0 +1,17 @@
+# --- API ---
+fastapi==0.115.*
+uvicorn[standard]==0.34.*        # ASGI server that runs FastAPI
+
+# --- Config ---
+pydantic-settings==2.*           # typed .env loading
+
+# --- Graph ---
+neo4j==5.*                       # official Bolt driver
+
+# --- LLM & GraphRAG ---
+langchain==0.3.*
+langchain-community==0.3.*
+langchain-ollama==0.2.*          # qwen2.5 + nomic-embed-text via Ollama
+langchain-experimental==0.3.*    # LLMGraphTransformer lives here
+langchain-neo4j==0.3.*           # Neo4jGraph integration
+json-repair==0.*                 # fixes malformed JSON from local LLMs during extraction
