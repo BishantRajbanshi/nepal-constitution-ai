@@ -15,3 +15,11 @@ langchain-ollama==0.2.*          # qwen2.5 + nomic-embed-text via Ollama
 langchain-experimental==0.3.*    # LLMGraphTransformer lives here
 langchain-neo4j==0.3.*           # Neo4jGraph integration
 json-repair==0.*                 # fixes malformed JSON from local LLMs during extraction
+
+# --- Data ingestion ---
+pypdf==5.*
+requests==2.*
+
+# --- Data ingestion ---
+pypdf==5.*
+requests==2.*
