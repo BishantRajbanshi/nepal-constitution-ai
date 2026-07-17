@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nepal Constitution Assistant</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f6f5f2;
+      --surface: #ffffff;
+      --border: #e3e0d8;
+      --text: #26241f;
+      --muted: #7a766c;
+      --accent: #8f3b2d;        /* crimson, after Nepal's flag */
+      --accent-soft: #f6e9e6;
+      --chip-bg: #eef1e8;
+      --chip-text: #4a5537;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      max-width: 760px;
+      padding: 2.5rem 1.25rem 1.5rem;
+      text-align: center;
+    }
+    header h1 { font-size: 1.5rem; font-weight: 700; }
+    header p { color: var(--muted); font-size: 0.9rem; margin-top: 0.4rem; }
+
+    main {
+      width: 100%;
+      max-width: 760px;
+      flex: 1;
+      padding: 0 1.25rem 8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .msg {
+      border-radius: 12px;
+      padding: 0.9rem 1.1rem;
+      line-height: 1.55;
+      font-size: 0.95rem;
+      max-width: 92%;
+      white-space: pre-wrap;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #fff;
+    }
+    .msg.bot {
+      align-self: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .msg.error {
+      align-self: flex-start;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+
+    .meta { margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .meta-label {
+      width: 100%;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+    .chip {
+      background: var(--chip-bg);
+      color: var(--chip-text);
+      border-radius: 999px;
+      padding: 0.15rem 0.6rem;
+      font-size: 0.78rem;
+    }
+    .chip.entity { background: #e8ecf1; color: #37475a; }
+
+    .typing { color: var(--muted); font-style: italic; }
+
+    form {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 760px;
+      padding: 1rem 1.25rem 1.5rem;
+      background: linear-gradient(transparent, var(--bg) 30%);
+      display: flex;
+      gap: 0.5rem;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+    button {
+      padding: 0.85rem 1.4rem;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🇳🇵 Nepal Constitution Assistant</h1>
+    <p>Ask about Part 3 (Fundamental Rights) of the Constitution of Nepal, 2015.<br>General information — not legal advice.</p>
+  </header>
+
+  <main id="chat"></main>
+
+  <form id="ask-form">
+    <input type="text" id="question" placeholder="e.g. What does the constitution say about the right to education?" autocomplete="off" required />
+    <button type="submit" id="send">Ask</button>
+  </form>
+
+  <script>
+    const chat = document.getElementById("chat");
+    const form = document.getElementById("ask-form");
+    const input = document.getElementById("question");
+    const sendBtn = document.getElementById("send");
+
+    function addMessage(cls, text) {
+      const div = document.createElement("div");
+      div.className = "msg " + cls;
+      div.textContent = text;
+      chat.appendChild(div);
+      div.scrollIntoView({ behavior: "smooth", block: "end" });
+      return div;
+    }
+
+    function addChips(parent, label, items, chipClass) {
+      if (!items || items.length === 0) return;
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const labelEl = document.createElement("div");
+      labelEl.className = "meta-label";
+      labelEl.textContent = label;
+      meta.appendChild(labelEl);
+      for (const item of items) {
+        const chip = document.createElement("span");
+        chip.className = "chip " + chipClass;
+        chip.textContent = item;
+        meta.appendChild(chip);
+      }
+      parent.appendChild(meta);
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const question = input.value.trim();
+      if (!question) return;
+
+      addMessage("user", question);
+      input.value = "";
+      sendBtn.disabled = true;
+      input.disabled = true;
+      const typing = addMessage("bot typing", "Searching the constitution…");
+
+      try {
+        const res = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question }),
+        });
+        if (!res.ok) throw new Error("Server returned " + res.status);
+        const data = await res.json();
+
+        typing.remove();
+        const bot = addMessage("bot", data.answer);
+        addChips(bot, "Cited articles", data.articles, "");
+        addChips(bot, "Matched entities", data.entities, "entity");
+        bot.scrollIntoView({ behavior: "smooth", block: "end" });
+      } catch (err) {
+        typing.remove();
+        const hint = location.protocol === "file:"
+          ? "\nYou opened this file directly — open http://localhost:8000/ instead, so the page is served by the API. lol"
+          : "\nMake sure Neo4j and Ollama are running.";
+        addMessage("error", "Something went wrong: " + err.message + hint);
+      } finally {
+        sendBtn.disabled = false;
+        input.disabled = false;
+        input.focus();
+      }
+    });
+
+    input.focus();
+  </script>
+</body>
+</html>
