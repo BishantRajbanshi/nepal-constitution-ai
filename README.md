@@ -10,9 +10,9 @@ knowledge graph instead of plain document search.
 
 ## Demo
 
-![Frontend demo](docs/images/frontend-demo.png)
-
 ![Frontend 2 demo](docs/images/frontend-2.png)
+
+![Frontend demo](docs/images/frontend-demo.png)
 
 ## Why GraphRAG?
 
