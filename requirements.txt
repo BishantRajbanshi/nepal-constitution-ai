@@ -20,6 +20,6 @@ json-repair==0.*                 # fixes malformed JSON from local LLMs during e
 pypdf==5.*
 requests==2.*
 
-# --- Data ingestion ---
-pypdf==5.*
-requests==2.*
+# --- Tests ---
+pytest==8.*
+httpx==0.28.*                    # required by fastapi.testclient

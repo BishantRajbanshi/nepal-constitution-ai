@@ -33,12 +33,14 @@ retrieval follows them.
 
 ## Quick start
 
-**Prerequisites:** Docker, Python 3.11+, [Ollama](https://ollama.com)
+**Prerequisites:** Docker, Python 3.11+, [Ollama](https://ollama.com),
+optionally [uv](https://docs.astral.sh/uv/) (used here for the venv)
 
 ```bash
 # 1. Environment
-cp .env.example .env          # set NEO4J_USER / NEO4J_PASSWORD
-pip install -r requirements.txt
+cp .env.example .env          # NEO4J_PASSWORD is required; the rest have defaults
+uv venv && source venv/bin/activate     # or: python -m venv venv
+uv pip install -r requirements.txt      # or: pip install -r requirements.txt
 
 # 2. Services
 docker compose up -d          # Neo4j (with APOC)
@@ -62,6 +64,29 @@ curl -X POST http://localhost:8000/ask \
   -d '{"question": "Can a citizen be denied education based on caste?"}'
 ```
 
+```jsonc
+{
+  "answer": "No. ...",
+  "articles": ["Article 24", "Article 31"],  // citations
+  "entities": ["Caste Discrimination", ...]  // matched graph nodes
+}
+```
+
+`GET /health` returns `{"status": "ok"}` for liveness checks.
+
+### Configuration
+
+All settings live in `.env` ([app/core/config.py](app/core/config.py)):
+
+| Variable | Default |
+| --- | --- |
+| `NEO4J_PASSWORD` | *required — no default* |
+| `NEO4J_URI` | `bolt://localhost:7687` |
+| `NEO4J_USER` | `neo4j` |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` |
+| `LLM_MODEL` | `qwen2.5:7b` |
+| `EMBED_MODEL` | `nomic-embed-text` |
+
 ## Project structure
 
 ```text
@@ -70,11 +95,26 @@ app/
   api/routes.py      # POST /ask endpoint
   core/config.py     # settings (.env)
   services/          # graph, retriever, llm
-frontend/index.html  # single-page web UI
+frontend/
+  index.html         # single-page web UI
+  styles.css
+  app.js
 scripts/             # fetch → ingest → embed pipeline
+tests/               # pytest suite (Neo4j + Ollama mocked)
 docs/images/         # screenshots used in this README
 data/                # raw PDF + per-article markdown
 ```
+
+## Tests
+
+```bash
+pytest
+```
+
+No Neo4j or Ollama needed — the graph and embedding calls are mocked, so the
+suite runs in well under a second. Coverage is on the two places where bugs
+would be silent: retrieval context assembly / citation extraction, and the
+`/ask` request-response contract.
 
 ## Scope
 
@@ -89,6 +129,11 @@ LangChain · FastAPI · Docker
 ## Disclaimer
 
 Educational project — not legal advice.
+
+## License
+
+[MIT](LICENSE). The Constitution of Nepal itself is a public government
+document and is not covered by this license.
 
 ## Status
 
