@@ -1,218 +1,840 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Nepal Constitution Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+Devanagari:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
     :root {
-      --bg: #f6f5f2;
+      --bg: #f7f6f3;
       --surface: #ffffff;
-      --border: #e3e0d8;
-      --text: #26241f;
-      --muted: #7a766c;
-      --accent: #8f3b2d;        /* crimson, after Nepal's flag */
-      --accent-soft: #f6e9e6;
-      --chip-bg: #eef1e8;
-      --chip-text: #4a5537;
+      --panel-bg: #fbfaf7;
+      --border: #e5e2db;
+      --border-soft: #edeae3;
+      --ink: #1c1b1f;
+      --ink-2: #26242c;
+      --ink-3: #3a3843;
+      --ink-4: #4a4852;
+      --muted: #6e6b76;
+      --faint: #9b98a0;
+      --crimson: #b5123b;
+      --crimson-dark: #971031;
+      --crimson-bg: #fbf3f5;
+      --crimson-border: #e9cbd3;
+      --blue: #24449c;
+      --blue-bg: #eef1f9;
+      --blue-bg-soft: #f5f7fc;
+      --blue-border: #d8def0;
+      --sans: "IBM Plex Sans", sans-serif;
+      --serif: "IBM Plex Serif", serif;
+      --mono: "IBM Plex Mono", monospace;
+      --devanagari: "Noto Serif Devanagari", serif;
     }
 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { height: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: var(--sans);
       background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
+      color: var(--ink);
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { color: var(--crimson); }
+    ::placeholder { color: var(--faint); }
+    button { font-family: inherit; }
+
+    @keyframes dotPulse {
+      0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+      40% { opacity: 1; transform: translateY(-3px); }
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* ---------- header ---------- */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .logo {
+      width: 38px;
+      height: 38px;
+      background: var(--crimson);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--devanagari);
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+    }
+    .brand { display: flex; flex-direction: column; gap: 1px; }
+    .brand-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+    .brand-sub { font-family: var(--devanagari); font-size: 12.5px; color: var(--muted); }
+    .badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--blue);
+      background: var(--blue-bg);
+      border: 1px solid var(--blue-border);
+      border-radius: 999px;
+      padding: 4px 10px;
+      margin-left: 8px;
+      white-space: nowrap;
+    }
+    .spacer { flex: 1; }
+    .lang-toggle {
+      display: flex;
+      gap: 2px;
+      background: #f1efea;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px;
+    }
+    .lang-toggle button {
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      background: transparent;
+      color: var(--muted);
+    }
+    .lang-toggle button.en { font-family: var(--sans); }
+    .lang-toggle button.np { font-family: var(--devanagari); }
+    .lang-toggle button.active { background: var(--blue); color: #fff; }
+
+    /* ---------- layout ---------- */
+    .body { display: flex; flex: 1; min-height: 0; }
+    main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+    .scroll { flex: 1; overflow-y: auto; padding: 28px 32px; }
+    .thread {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ---------- empty state ---------- */
+    .empty {
       display: flex;
       flex-direction: column;
       align-items: center;
-    }
-
-    header {
-      width: 100%;
-      max-width: 760px;
-      padding: 2.5rem 1.25rem 1.5rem;
       text-align: center;
+      padding: 48px 20px 24px;
+      gap: 14px;
     }
-    header h1 { font-size: 1.5rem; font-weight: 700; }
-    header p { color: var(--muted); font-size: 0.9rem; margin-top: 0.4rem; }
-
-    main {
+    .empty-title {
+      font-family: var(--devanagari);
+      font-size: 44px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+    .empty-intro {
+      font-size: 15px;
+      color: var(--muted);
+      max-width: 480px;
+      line-height: 1.6;
+      text-wrap: pretty;
+    }
+    .empty-rule { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+    .empty-rule .line { width: 36px; height: 1px; background: #d8d4cb; }
+    .empty-rule .label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--faint);
+      letter-spacing: 0.08em;
+    }
+    .suggestions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
       width: 100%;
-      max-width: 760px;
-      flex: 1;
-      padding: 0 1.25rem 8rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+      max-width: 620px;
+    }
+    .suggestions button {
+      text-align: left;
+      cursor: pointer;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-family: var(--sans);
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--ink-3);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .suggestions button:hover {
+      border-color: var(--crimson);
+      box-shadow: 0 2px 8px rgba(181, 18, 59, 0.08);
     }
 
-    .msg {
-      border-radius: 12px;
-      padding: 0.9rem 1.1rem;
+    /* ---------- messages ---------- */
+    .msg-row { display: flex; flex-direction: column; }
+    .msg-user {
+      align-self: flex-end;
+      max-width: 82%;
+      background: var(--blue);
+      color: #fff;
+      border-radius: 14px 14px 4px 14px;
+      padding: 11px 16px;
+      font-size: 14px;
       line-height: 1.55;
-      font-size: 0.95rem;
-      max-width: 92%;
       white-space: pre-wrap;
     }
-    .msg.user {
-      align-self: flex-end;
-      background: var(--accent);
-      color: #fff;
-    }
-    .msg.bot {
+    .msg-bot {
       align-self: flex-start;
-      background: var(--surface);
-      border: 1px solid var(--border);
-    }
-    .msg.error {
-      align-self: flex-start;
-      background: var(--accent-soft);
-      border: 1px solid var(--accent);
-      color: var(--accent);
-    }
-
-    .meta { margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.35rem; }
-    .meta-label {
-      width: 100%;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--muted);
-      margin-top: 0.25rem;
-    }
-    .chip {
-      background: var(--chip-bg);
-      color: var(--chip-text);
-      border-radius: 999px;
-      padding: 0.15rem 0.6rem;
-      font-size: 0.78rem;
-    }
-    .chip.entity { background: #e8ecf1; color: #37475a; }
-
-    .typing { color: var(--muted); font-style: italic; }
-
-    form {
-      position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      max-width: 760px;
-      padding: 1rem 1.25rem 1.5rem;
-      background: linear-gradient(transparent, var(--bg) 30%);
+      max-width: 88%;
       display: flex;
-      gap: 0.5rem;
+      flex-direction: column;
+      gap: 8px;
     }
-    input[type="text"] {
+    .msg-bot .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px 14px 14px 4px;
+      padding: 14px 18px;
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--ink-2);
+      white-space: pre-wrap;
+      box-shadow: 0 1px 3px rgba(28, 27, 31, 0.04);
+    }
+    .citations { display: flex; flex-wrap: wrap; gap: 6px; }
+    .citations button {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--crimson-bg);
+      border: 1px solid var(--crimson-border);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--crimson);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .citations button:hover {
+      background: var(--crimson);
+      color: #fff;
+      border-color: var(--crimson);
+    }
+    .demo-note { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
+
+    /* ---------- loading ---------- */
+    .loading {
+      align-self: flex-start;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px 14px 14px 4px;
+      padding: 14px 18px;
+    }
+    .dots { display: flex; gap: 4px; }
+    .dots div {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--crimson);
+      animation: dotPulse 1.2s infinite;
+    }
+    .dots div:nth-child(2) { animation-delay: 0.2s; }
+    .dots div:nth-child(3) { animation-delay: 0.4s; }
+    .loading .label { font-family: var(--mono); font-size: 11px; color: var(--faint); }
+
+    /* ---------- composer ---------- */
+    .composer-wrap {
+      flex-shrink: 0;
+      padding: 14px 32px 10px;
+      background: linear-gradient(to top, var(--bg) 70%, rgba(247, 246, 243, 0));
+    }
+    .composer {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid #ddd9d1;
+      border-radius: 14px;
+      padding: 8px 8px 8px 18px;
+      box-shadow: 0 2px 12px rgba(28, 27, 31, 0.06);
+      align-items: center;
+    }
+    .composer input {
       flex: 1;
-      padding: 0.85rem 1rem;
+      border: none;
+      outline: none;
+      font-family: var(--sans);
+      font-size: 14.5px;
+      color: var(--ink);
+      background: transparent;
+      padding: 8px 0;
+      min-width: 0;
+    }
+    .composer button {
+      cursor: pointer;
+      border: none;
+      background: var(--crimson);
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 600;
+      border-radius: 9px;
+      padding: 10px 20px;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .composer button:hover { background: var(--crimson-dark); }
+    .disclaimer {
+      max-width: 720px;
+      margin: 8px auto 0;
+      text-align: center;
+      font-size: 11px;
+      color: var(--faint);
+    }
+
+    /* ---------- side panel ---------- */
+    aside {
+      width: 336px;
+      flex-shrink: 0;
+      border-left: 1px solid var(--border);
+      background: var(--panel-bg);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .panel-head {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border-soft);
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .panel-head .title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--ink-3);
+    }
+    .panel-head .title-np {
+      font-family: var(--devanagari);
+      font-size: 12px;
+      color: var(--faint);
+    }
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .panel-empty {
+      font-size: 12.5px;
+      color: var(--faint);
+      line-height: 1.6;
+      padding: 8px 2px;
+      text-wrap: pretty;
+    }
+    .card {
+      cursor: pointer;
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      font-size: 0.95rem;
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    input[type="text"]:focus { border-color: var(--accent); }
-    button {
-      padding: 0.85rem 1.4rem;
-      border: none;
-      border-radius: 10px;
-      background: var(--accent);
-      color: #fff;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
+    .card.active {
+      border-color: var(--crimson);
+      box-shadow: 0 2px 10px rgba(181, 18, 59, 0.12);
     }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .card-head { display: flex; align-items: center; gap: 8px; }
+    .card-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--blue);
+      background: var(--blue-bg);
+      border-radius: 5px;
+      padding: 2px 8px;
+    }
+    .card-part {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--faint);
+      letter-spacing: 0.05em;
+    }
+    .card-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+    .card-title-np { font-family: var(--devanagari); font-size: 12.5px; color: var(--muted); }
+    .card-excerpt {
+      font-family: var(--serif);
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: var(--ink-4);
+      border-left: 2px solid var(--crimson-border);
+      padding-left: 10px;
+    }
+    .card-rel {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--blue);
+      background: var(--blue-bg-soft);
+      border-radius: 6px;
+      padding: 6px 9px;
+      line-height: 1.5;
+    }
+
+    /* ---------- responsive ---------- */
+    @media (max-width: 940px) {
+      aside { display: none; }
+      .badge { display: none; }
+    }
+    @media (max-width: 560px) {
+      .suggestions { grid-template-columns: 1fr; }
+      .scroll { padding: 20px 16px; }
+      .composer-wrap { padding: 12px 16px 8px; }
+      .brand-sub { display: none; }
+      .empty-title { font-size: 34px; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🇳🇵 Nepal Constitution Assistant</h1>
-    <p>Ask about Part 3 (Fundamental Rights) of the Constitution of Nepal, 2015.<br>General information — not legal advice.</p>
-  </header>
+  <div id="app">
+    <header>
+      <div class="logo">न</div>
+      <div class="brand">
+        <div class="brand-title">Nepal Constitution Assistant</div>
+        <div class="brand-sub">नेपालको संविधान · २०७२</div>
+      </div>
+      <div class="badge">GraphRAG · Neo4j</div>
+      <div class="spacer"></div>
+      <div class="lang-toggle">
+        <button type="button" class="en" id="lang-en">EN</button>
+        <button type="button" class="np" id="lang-np">नेपाली</button>
+      </div>
+    </header>
 
-  <main id="chat"></main>
+    <div class="body">
+      <main>
+        <div class="scroll" id="scroll">
+          <div class="thread" id="thread"></div>
+        </div>
+        <div class="composer-wrap">
+          <div class="composer">
+            <input type="text" id="input" autocomplete="off" />
+            <button type="button" id="send-btn"></button>
+          </div>
+          <div class="disclaimer" id="disclaimer"></div>
+        </div>
+      </main>
 
-  <form id="ask-form">
-    <input type="text" id="question" placeholder="e.g. What does the constitution say about the right to education?" autocomplete="off" required />
-    <button type="submit" id="send">Ask</button>
-  </form>
+      <aside>
+        <div class="panel-head">
+          <div class="title" id="panel-title"></div>
+          <div class="title-np">उद्धृत धाराहरू</div>
+        </div>
+        <div class="panel-body" id="panel-body"></div>
+      </aside>
+    </div>
+  </div>
 
   <script>
-    const chat = document.getElementById("chat");
-    const form = document.getElementById("ask-form");
-    const input = document.getElementById("question");
-    const sendBtn = document.getElementById("send");
+    "use strict";
 
-    function addMessage(cls, text) {
-      const div = document.createElement("div");
-      div.className = "msg " + cls;
-      div.textContent = text;
-      chat.appendChild(div);
-      div.scrollIntoView({ behavior: "smooth", block: "end" });
-      return div;
-    }
+    const API_URL = "/ask";
+    const API_TIMEOUT_MS = 120000; // qwen2.5 via Ollama can be slow; only demo-fallback on real failure
 
-    function addChips(parent, label, items, chipClass) {
-      if (!items || items.length === 0) return;
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      const labelEl = document.createElement("div");
-      labelEl.className = "meta-label";
-      labelEl.textContent = label;
-      meta.appendChild(labelEl);
-      for (const item of items) {
-        const chip = document.createElement("span");
-        chip.className = "chip " + chipClass;
-        chip.textContent = item;
-        meta.appendChild(chip);
+    /* Part 3 — Fundamental Rights (Articles 16–48), Constitution of Nepal 2015 */
+    const ARTICLES = {
+      16: { en: "Right to Live with Dignity", np: "सम्मानपूर्वक बाँच्न पाउने हक",
+            excerpt: "Every person shall have the right to live with dignity. No law shall be made providing for the death penalty to any one.",
+            rel: "Human Dignity —GUARANTEED_BY→ Article 16" },
+      17: { en: "Right to Freedom", np: "स्वतन्त्रताको हक",
+            excerpt: "Every citizen shall have the freedom of opinion and expression, freedom to assemble peaceably and without arms, and freedom to form political parties.",
+            rel: "Freedom of Expression —GUARANTEED_BY→ Article 17" },
+      18: { en: "Right to Equality", np: "समानताको हक",
+            excerpt: "All citizens shall be equal before law. No person shall be denied the equal protection of law.",
+            rel: "Equality —GUARANTEED_BY→ Article 18" },
+      19: { en: "Right to Communication", np: "सञ्चारको हक",
+            excerpt: "No publication and broadcasting or dissemination or printing of any news item, editorial, feature article or other reading, audio and audio-visual material shall be censored.",
+            rel: "Press Freedom —GUARANTEED_BY→ Article 19" },
+      20: { en: "Rights relating to Justice", np: "न्याय सम्बन्धी हक",
+            excerpt: "No person shall be detained in custody without being informed of the ground of arrest, and every arrested person has the right to consult a legal practitioner of choice.",
+            rel: "Due Process —GUARANTEED_BY→ Article 20" },
+      21: { en: "Right of Victim of Crime", np: "अपराध पीडितको हक",
+            excerpt: "A victim of crime shall have the right to information about the investigation and proceedings, and the right to justice including social rehabilitation and compensation.",
+            rel: "Victim Justice —GUARANTEED_BY→ Article 21" },
+      22: { en: "Right against Torture", np: "यातना विरुद्धको हक",
+            excerpt: "No person who is arrested or detained shall be subjected to physical or mental torture or to cruel, inhuman or degrading treatment.",
+            rel: "Torture —PROHIBITED_BY→ Article 22" },
+      23: { en: "Right against Preventive Detention", np: "निवारक नजरबन्द विरुद्धको हक",
+            excerpt: "No person shall be held under preventive detention unless there is a sufficient ground of an immediate threat to the sovereignty, territorial integrity or public peace and order of Nepal.",
+            rel: "Preventive Detention —LIMITED_BY→ Article 23" },
+      24: { en: "Right against Untouchability & Discrimination", np: "छुवाछूत तथा भेदभाव विरुद्धको हक",
+            excerpt: "No person shall be subjected to any form of untouchability or discrimination in any private and public places on grounds of origin, caste, tribe, community, profession, occupation or physical condition.",
+            rel: "Caste Discrimination —PROHIBITED_BY→ Article 24" },
+      25: { en: "Right to Property", np: "सम्पत्तिको हक",
+            excerpt: "Every citizen shall, subject to law, have the right to acquire, own, sell and otherwise dispose of property. The State shall not, except in public interest, acquire or requisition the property of a person.",
+            rel: "Property —PROTECTED_BY→ Article 25" },
+      26: { en: "Right to Freedom of Religion", np: "धार्मिक स्वतन्त्रताको हक",
+            excerpt: "Every person who has faith in religion shall have the freedom to profess, practice and protect his or her religion according to his or her conviction.",
+            rel: "Religious Freedom —GUARANTEED_BY→ Article 26" },
+      27: { en: "Right to Information", np: "सूचनाको हक",
+            excerpt: "Every citizen shall have the right to demand and receive information on any matter of his or her interest or of public interest.",
+            rel: "Right to Information —GUARANTEED_BY→ Article 27" },
+      28: { en: "Right to Privacy", np: "गोपनीयताको हक",
+            excerpt: "The privacy of any person, his or her residence, property, document, data, correspondence and matters relating to his or her character shall, except in accordance with law, be inviolable.",
+            rel: "Privacy —PROTECTED_BY→ Article 28" },
+      29: { en: "Right against Exploitation", np: "शोषण विरुद्धको हक",
+            excerpt: "Every person shall have the right against exploitation. No one shall be subjected to trafficking nor shall one be held in slavery or servitude.",
+            rel: "Exploitation —PROHIBITED_BY→ Article 29" },
+      30: { en: "Right to Clean Environment", np: "स्वच्छ वातावरणको हक",
+            excerpt: "Every citizen shall have the right to live in a clean and healthy environment, and the victim of environmental pollution has the right to compensation in accordance with law.",
+            rel: "Clean Environment —GUARANTEED_BY→ Article 30" },
+      31: { en: "Right to Education", np: "शिक्षा सम्बन्धी हक",
+            excerpt: "Every citizen shall have the right of access to basic education, and the right to compulsory and free education up to the basic level and free education up to the secondary level from the State.",
+            rel: "Right to Education —GUARANTEED_BY→ Article 31" },
+      32: { en: "Right to Language & Culture", np: "भाषा तथा संस्कृतिको हक",
+            excerpt: "Every person and community shall have the right to use their languages and to participate in the cultural life of their communities.",
+            rel: "Language & Culture —GUARANTEED_BY→ Article 32" },
+      33: { en: "Right to Employment", np: "रोजगारीको हक",
+            excerpt: "Every citizen shall have the right to employment and the right to choose employment, with terms, conditions and unemployment benefit as provided for in the Federal law.",
+            rel: "Employment —GUARANTEED_BY→ Article 33" },
+      34: { en: "Right to Labour", np: "श्रमको हक",
+            excerpt: "Every labourer shall have the right to practice appropriate labour, and to fair remuneration, facilities and contribution-based social security.",
+            rel: "Labour Rights —GUARANTEED_BY→ Article 34" },
+      35: { en: "Right relating to Health", np: "स्वास्थ्य सम्बन्धी हक",
+            excerpt: "Every citizen shall have the right to free basic health services from the State, and no one shall be deprived of emergency health services.",
+            rel: "Right to Health —GUARANTEED_BY→ Article 35" },
+      36: { en: "Right relating to Food", np: "खाद्य सम्बन्धी हक",
+            excerpt: "Every citizen shall have the right relating to food, the right to be safe from the danger of life from the scarcity of food, and the right to food sovereignty in accordance with law.",
+            rel: "Food Security —GUARANTEED_BY→ Article 36" },
+      37: { en: "Right to Housing", np: "आवासको हक",
+            excerpt: "Every citizen shall have the right to an appropriate housing. No citizen shall be evicted from the residence owned by him or her except in accordance with law.",
+            rel: "Housing —GUARANTEED_BY→ Article 37" },
+      38: { en: "Rights of Women", np: "महिलाको हक",
+            excerpt: "Every woman shall have equal lineage right without gender-based discrimination, and the right to safe motherhood and reproductive health. Violence against women is punishable by law.",
+            rel: "Women's Rights —GUARANTEED_BY→ Article 38" },
+      39: { en: "Rights of the Child", np: "बालबालिकाको हक",
+            excerpt: "Every child shall have the right to name and birth registration, and to education, health, maintenance, proper care, sports, entertainment and overall personality development.",
+            rel: "Child Rights —GUARANTEED_BY→ Article 39" },
+      40: { en: "Rights of Dalit", np: "दलितको हक",
+            excerpt: "The Dalit shall have the right to participate in all bodies of the State on the basis of the principle of proportional inclusion, with special provision by law for empowerment.",
+            rel: "Dalit Inclusion —GUARANTEED_BY→ Article 40" },
+      41: { en: "Rights of Senior Citizens", np: "ज्येष्ठ नागरिकको हक",
+            excerpt: "The senior citizens shall have the right to special protection and social security from the State.",
+            rel: "Senior Citizens —PROTECTED_BY→ Article 41" },
+      42: { en: "Right to Social Justice", np: "सामाजिक न्यायको हक",
+            excerpt: "The socially backward women, Dalit, indigenous people, Madhesi, Tharu, minorities, persons with disabilities and marginalized communities shall have the right to participate in State bodies on the basis of inclusion.",
+            rel: "Social Justice —GUARANTEED_BY→ Article 42" },
+      43: { en: "Right to Social Security", np: "सामाजिक सुरक्षाको हक",
+            excerpt: "The indigent citizens, incapacitated and helpless citizens, helpless single women, citizens with disabilities and children shall have the right to social security in accordance with law.",
+            rel: "Social Security —GUARANTEED_BY→ Article 43" },
+      44: { en: "Rights of the Consumer", np: "उपभोक्ताको हक",
+            excerpt: "Every consumer shall have the right to obtain quality goods and services, and to compensation for injury from any substandard goods or services.",
+            rel: "Consumer Protection —GUARANTEED_BY→ Article 44" },
+      45: { en: "Right against Exile", np: "देश निकाला विरुद्धको हक",
+            excerpt: "No citizen shall be exiled.",
+            rel: "Exile —PROHIBITED_BY→ Article 45" },
+      46: { en: "Right to Constitutional Remedies", np: "संवैधानिक उपचारको हक",
+            excerpt: "There shall be a right to obtain constitutional remedies in the manner set forth in Article 133 or 144 for the enforcement of the rights conferred by this Part.",
+            rel: "Constitutional Remedies —PROVIDED_BY→ Article 46" },
+      47: { en: "Implementation of Fundamental Rights", np: "मौलिक हकको कार्यान्वयन",
+            excerpt: "The State shall, as required, make legal provisions for the implementation of the rights conferred by this Part, within three years of the commencement of this Constitution.",
+            rel: "Implementation —MANDATED_BY→ Article 47" },
+      48: { en: "Duties of Citizens", np: "नागरिकका कर्तव्य",
+            excerpt: "Every citizen shall have the duty to safeguard the nationality, sovereignty and integrity of Nepal, to abide by the Constitution and law, and to protect and preserve public property.",
+            rel: "Citizen Duties —DEFINED_BY→ Article 48" }
+    };
+
+    const STRINGS = {
+      en: {
+        intro: "Ask anything about the Constitution of Nepal (2015). Every answer is grounded in the actual articles it draws from — retrieved through a knowledge graph, not keyword search.",
+        suggested: "TRY ASKING",
+        placeholder: "Ask about the Constitution of Nepal…",
+        send: "Send",
+        panel: "Cited articles",
+        panelEmpty: "When the assistant answers, the constitutional articles it cites will appear here with their full text.",
+        thinking: "traversing knowledge graph…",
+        demoNote: "offline demo answer — backend not connected",
+        disclaimer: "Educational tool — not legal advice · GraphRAG over Neo4j · qwen2.5"
+      },
+      np: {
+        intro: "नेपालको संविधान (२०७२) बारे जे पनि सोध्नुहोस्। हरेक उत्तर वास्तविक धाराहरूमा आधारित हुन्छ — ज्ञान ग्राफबाट खोजिएको, साधारण खोज होइन।",
+        suggested: "सोधेर हेर्नुहोस्",
+        placeholder: "नेपालको संविधानबारे सोध्नुहोस्…",
+        send: "पठाउनुहोस्",
+        panel: "Cited articles",
+        panelEmpty: "उत्तरमा उद्धृत धाराहरू यहाँ पूर्ण पाठसहित देखिनेछन्।",
+        thinking: "ज्ञान ग्राफ खोज्दै…",
+        demoNote: "अफलाइन डेमो उत्तर — ब्याकएन्ड जोडिएको छैन",
+        disclaimer: "शैक्षिक उद्देश्य मात्र — कानुनी सल्लाह होइन · GraphRAG · Neo4j · qwen2.5"
       }
-      parent.appendChild(meta);
+    };
+
+    const SUGGESTIONS = {
+      en: [
+        "Can a citizen be denied education based on caste?",
+        "What does the constitution say about freedom of speech?",
+        "Is health care a fundamental right in Nepal?",
+        "Can the state take away private property?"
+      ],
+      np: [
+        "के जातका आधारमा नागरिकलाई शिक्षाबाट वञ्चित गर्न सकिन्छ?",
+        "वाक् स्वतन्त्रताबारे संविधानले के भन्छ?",
+        "के स्वास्थ्य सेवा मौलिक हक हो?",
+        "के राज्यले निजी सम्पत्ति लिन सक्छ?"
+      ]
+    };
+
+    const state = {
+      messages: [],   // { isUser, isBot, text, nums, demo }
+      loading: false,
+      lang: "en",
+      citedNums: [],
+      activeNum: null
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const scrollEl = $("scroll");
+    const threadEl = $("thread");
+    const inputEl = $("input");
+    const sendBtn = $("send-btn");
+
+    function h(tag, cls, text) {
+      const el = document.createElement(tag);
+      if (cls) el.className = cls;
+      if (text != null) el.textContent = text;
+      return el;
     }
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const question = input.value.trim();
-      if (!question) return;
+    const t = () => STRINGS[state.lang];
+    const title = (n) => (state.lang === "np" ? ARTICLES[n].np : ARTICLES[n].en);
 
-      addMessage("user", question);
-      input.value = "";
-      sendBtn.disabled = true;
-      input.disabled = true;
-      const typing = addMessage("bot typing", "Searching the constitution…");
+    /* ---- offline demo answers (used only when the backend is unreachable) ---- */
+    function demoAnswer(q) {
+      const s = q.toLowerCase();
+      if (s.includes("educat") || s.includes("caste") || s.includes("शिक्षा") || s.includes("जात"))
+        return { text: "No. The Constitution prohibits denying any citizen education on the basis of caste.\n\nArticle 31 guarantees every citizen the right of access to basic education, and Article 24 explicitly prohibits discrimination on grounds of caste in both public and private places. Read together with Article 18 (equality before law), denying education based on caste would be unconstitutional.", nums: [31, 24, 18] };
+      if (s.includes("speech") || s.includes("expression") || s.includes("opinion") || s.includes("वाक्"))
+        return { text: "Article 17 of the Constitution guarantees every citizen the freedom of opinion and expression, along with the freedoms to assemble peaceably, form political parties, and move and reside within Nepal. These freedoms carry reasonable restrictions — for example, acts undermining national sovereignty or inciting caste-based discrimination may be regulated by law.", nums: [17] };
+      if (s.includes("health") || s.includes("स्वास्थ्य"))
+        return { text: "Yes. Article 35 makes health a fundamental right: every citizen has the right to free basic health services from the State, and no one may be deprived of emergency health services. It also guarantees the right to information about one’s own medical treatment and access to clean drinking water and sanitation.", nums: [35] };
+      if (s.includes("propert") || s.includes("land") || s.includes("सम्पत्ति"))
+        return { text: "Article 25 protects the right to property: every citizen may acquire, own, sell and otherwise dispose of property, subject to law. The State may only acquire or requisition private property in the public interest, and with compensation — arbitrary taking is prohibited.", nums: [25] };
+      if (s.includes("equal") || s.includes("समान"))
+        return { text: "Article 18 guarantees the right to equality: all citizens are equal before law and entitled to its equal protection. Discrimination in the application of general laws on grounds such as origin, religion, caste, tribe, or sex is prohibited, while special provisions for the protection or advancement of marginalized groups are permitted.", nums: [18] };
+      return { text: "The live backend is not connected, so I can only demo a few topics right now — try asking about education and caste, freedom of speech, health care, property, or equality. When connected to the GraphRAG backend, I can answer questions across Part 3 (Fundamental Rights, Articles 16–48) of the Constitution of Nepal.", nums: [] };
+    }
 
+    /* ---- map an /ask response to article numbers we can cite ---- */
+    function extractNums(data) {
+      const found = new Set();
+      if (Array.isArray(data.articles)) {
+        for (const a of data.articles) {
+          const m = String(a).match(/(\d+)/);
+          if (m && ARTICLES[+m[1]]) found.add(+m[1]);
+        }
+      }
+      const text = data.answer || "";
+      const re = /Article\s+(\d+)/gi;
+      let m;
+      while ((m = re.exec(text))) if (ARTICLES[+m[1]]) found.add(+m[1]);
+      return [...found];
+    }
+
+    async function send(text) {
+      text = (text || "").trim();
+      if (!text || state.loading) return;
+
+      state.messages.push({ isUser: true, text });
+      state.loading = true;
+      inputEl.value = "";
+      renderChat(true);
+
+      let ans = null;
       try {
-        const res = await fetch("/ask", {
+        const ctl = new AbortController();
+        const to = setTimeout(() => ctl.abort(), API_TIMEOUT_MS);
+        const res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question }),
+          body: JSON.stringify({ question: text }),
+          signal: ctl.signal
         });
-        if (!res.ok) throw new Error("Server returned " + res.status);
-        const data = await res.json();
+        clearTimeout(to);
+        if (res.ok) {
+          const data = await res.json();
+          ans = { text: data.answer || "", nums: extractNums(data), demo: false };
+        }
+      } catch (e) { /* fall through to demo */ }
 
-        typing.remove();
-        const bot = addMessage("bot", data.answer);
-        addChips(bot, "Cited articles", data.articles, "");
-        addChips(bot, "Matched entities", data.entities, "entity");
-        bot.scrollIntoView({ behavior: "smooth", block: "end" });
-      } catch (err) {
-        typing.remove();
-        const hint = location.protocol === "file:"
-          ? "\nYou opened this file directly — open http://localhost:8000/ instead, so the page is served by the API. lol"
-          : "\nMake sure Neo4j and Ollama are running.";
-        addMessage("error", "Something went wrong: " + err.message + hint);
-      } finally {
-        sendBtn.disabled = false;
-        input.disabled = false;
-        input.focus();
+      if (!ans) {
+        await new Promise((r) => setTimeout(r, 900));
+        ans = { ...demoAnswer(text), demo: true };
       }
+
+      state.messages.push({ isBot: true, text: ans.text, nums: ans.nums, demo: ans.demo });
+      state.loading = false;
+      if (ans.nums.length) {
+        state.citedNums = ans.nums;
+        state.activeNum = ans.nums[0];
+      }
+      renderChat(true);
+      renderPanel();
+    }
+
+    function setActive(n) {
+      state.activeNum = n;
+      renderPanel();
+    }
+
+    /* ---------- render ---------- */
+    function renderChat(scrollToEnd) {
+      threadEl.replaceChildren();
+
+      if (state.messages.length === 0 && !state.loading) {
+        const empty = h("div", "empty");
+        empty.appendChild(h("div", "empty-title", "नेपालको संविधान"));
+        empty.appendChild(h("div", "empty-intro", t().intro));
+
+        const rule = h("div", "empty-rule");
+        rule.appendChild(h("div", "line"));
+        rule.appendChild(h("div", "label", t().suggested));
+        rule.appendChild(h("div", "line"));
+        empty.appendChild(rule);
+
+        const grid = h("div", "suggestions");
+        for (const q of SUGGESTIONS[state.lang]) {
+          const b = h("button", null, q);
+          b.type = "button";
+          b.addEventListener("click", () => send(q));
+          grid.appendChild(b);
+        }
+        empty.appendChild(grid);
+        threadEl.appendChild(empty);
+      }
+
+      for (const msg of state.messages) {
+        const row = h("div", "msg-row");
+        if (msg.isUser) {
+          row.appendChild(h("div", "msg-user", msg.text));
+        } else {
+          const bot = h("div", "msg-bot");
+          bot.appendChild(h("div", "bubble", msg.text));
+          if (msg.nums && msg.nums.length) {
+            const cits = h("div", "citations");
+            for (const n of msg.nums) {
+              const b = h("button", null, `Art. ${n} · ${title(n)}`);
+              b.type = "button";
+              b.addEventListener("click", () => setActive(n));
+              cits.appendChild(b);
+            }
+            bot.appendChild(cits);
+          }
+          if (msg.demo) bot.appendChild(h("div", "demo-note", t().demoNote));
+          row.appendChild(bot);
+        }
+        threadEl.appendChild(row);
+      }
+
+      if (state.loading) {
+        const box = h("div", "loading");
+        const dots = h("div", "dots");
+        for (let i = 0; i < 3; i++) dots.appendChild(h("div"));
+        box.appendChild(dots);
+        box.appendChild(h("div", "label", t().thinking));
+        threadEl.appendChild(box);
+      }
+
+      if (scrollToEnd) scrollEl.scrollTop = scrollEl.scrollHeight;
+    }
+
+    function renderPanel() {
+      const body = $("panel-body");
+      body.replaceChildren();
+
+      if (state.citedNums.length === 0) {
+        body.appendChild(h("div", "panel-empty", t().panelEmpty));
+        return;
+      }
+
+      for (const n of state.citedNums) {
+        const a = ARTICLES[n];
+        const card = h("div", "card" + (state.activeNum === n ? " active" : ""));
+        card.addEventListener("click", () => setActive(n));
+
+        const head = h("div", "card-head");
+        head.appendChild(h("div", "card-num", `ART. ${n}`));
+        head.appendChild(h("div", "card-part", "PART 3 · FUNDAMENTAL RIGHTS"));
+        card.appendChild(head);
+
+        card.appendChild(h("div", "card-title", a.en));
+        card.appendChild(h("div", "card-title-np", a.np));
+        card.appendChild(h("div", "card-excerpt", a.excerpt));
+        card.appendChild(h("div", "card-rel", a.rel));
+        body.appendChild(card);
+      }
+    }
+
+    function renderStatic() {
+      document.documentElement.lang = state.lang === "np" ? "ne" : "en";
+      $("lang-en").classList.toggle("active", state.lang === "en");
+      $("lang-np").classList.toggle("active", state.lang === "np");
+      inputEl.placeholder = t().placeholder;
+      sendBtn.textContent = t().send;
+      $("disclaimer").textContent = t().disclaimer;
+      $("panel-title").textContent = t().panel;
+    }
+
+    function setLang(lang) {
+      state.lang = lang;
+      renderStatic();
+      renderChat(false);
+      renderPanel();
+    }
+
+    /* ---------- wire up ---------- */
+    $("lang-en").addEventListener("click", () => setLang("en"));
+    $("lang-np").addEventListener("click", () => setLang("np"));
+    sendBtn.addEventListener("click", () => send(inputEl.value));
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") send(inputEl.value);
     });
 
-    input.focus();
+    renderStatic();
+    renderChat(false);
+    renderPanel();
+    inputEl.focus();
   </script>
 </body>
 </html>
