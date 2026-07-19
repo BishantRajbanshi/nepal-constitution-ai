@@ -12,6 +12,8 @@ knowledge graph instead of plain document search.
 
 ![Frontend demo](docs/images/frontend-demo.png)
 
+![Frontend 2 demo](docs/images/frontend-2.png)
+
 ## Why GraphRAG?
 
 Classic RAG retrieves text chunks by similarity. Constitutional questions
